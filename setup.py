@@ -11,6 +11,8 @@ setup(
   version = '20.01'
   
   
-  description = 'A package to detect spectral lines, determine redshift and measure equivalent width'
+  description = 'A package to detect spectral lines, determine redshift and measure equivalent width of QSO and QAL.'
   long_description = open('README.rst').read(),
+  
+  packages = ['qso']
 )
