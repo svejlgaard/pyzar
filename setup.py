@@ -13,6 +13,8 @@ setup(
   
   description = 'A package to detect spectral lines, determine redshift and measure equivalent width of QSO and QAL.'
   long_description = open('README.md').read(),
+
   
-  packages = ['qso']
+  scripts = ['scripts/eqw.py'],
+  
 )
