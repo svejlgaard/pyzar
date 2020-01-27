@@ -1,2 +1,2 @@
 # pyzar
-A module for 
+A module for analyzing quazar data, including tools for determing equavalent width.
