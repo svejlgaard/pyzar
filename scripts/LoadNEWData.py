@@ -78,25 +78,12 @@ def LoadNEWData():
             flux_error = data[:,3]
             flux = data[:,2]
             wavelength = data[:,1]
-            print(len(flux_error),len(flux),len(wavelength))
-            print(flux, flux_error, wavelength)
 
-            #hdul = fits.open(filename)
-            #hdr = hdul[0].header
-            #flux_error = hdul[1].data
-            #lambda_min = hdr["WAVELMIN"]
-            #lambda_max = hdr["WAVELMAX"]
-            #print(lambda_min)
-            #if i==0:
-            #    name = hdr["OBJECT"]
             if i == 0:
                 pltname = pltname = filename.split(sep='/')[0]
                 output_name = f"table_{time_signature}_{pltname}"
-            #flux = hdul[0].data
-            #wavelength = np.linspace(lambda_min, lambda_max, num = flux.shape[0])
             selection = (wavelength > selec_dict[f"{fil}"][0]) & (wavelength < selec_dict[f"{fil}"][1])
             flux = flux[selection]
-            #print(flux)
             wavelength = wavelength[selection]
             flux_error = flux_error[selection]
             
@@ -113,6 +100,7 @@ def LoadNEWData():
             print("Directory " , dirName ,  " Created ")
         else:    
             print("Directory " , dirName ,  " already exists")
+            
         # Saves all the data to save time when reviewing the data 
         output_name = f'{dirName}/{output_name}'
         np.savez(output_name, **data_dict)
