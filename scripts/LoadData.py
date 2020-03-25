@@ -62,6 +62,7 @@ def LoadData():
     if loading == 'y':
         fig, ax1 = plt.subplots(figsize=(10,6))
 
+        #Lets the user search for the relevant files instead of copying in new names everytime
         for i, fil in enumerate(filters):
             check = 'n'    
             folder = None
