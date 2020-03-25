@@ -91,7 +91,7 @@ def addAbs(wl_mod, t):
 
 
 
-# Setting the constants as given by ???
+# Setting the constants as given by Kasper Heinz 
 
 c1 = -4.959
 c2 = 2.264
@@ -112,7 +112,7 @@ broad = 1
 
 # Setting an initial guess for the column density
 
-nion = 2.0e21
+nion = 2.0e20
 
 
 print('This script is written by Simone Vejlgaard Nielsen.')
@@ -133,7 +133,6 @@ if option == 0:
         total_wave, total_flux, total_err, pltname = LoadData()
     if data_type == 1:
         total_wave, total_flux, total_err, pltname = LoadNEWData()
-    #sp = pyspeckit.Spectrum(xarr = total_wave, data= total_flux, error = total_err)
     EQW(total_wave, total_flux, total_err, pltname)
 
 
@@ -157,7 +156,6 @@ elif option == 1:
 
     with open(filename, 'r') as infile:
         data = infile.read()
-    #data = np.genfromtxt(filename)
     start = len(r"""
 \begin{table}[H] 
 \begin{tabular}{cccccccc}
@@ -170,8 +168,9 @@ Transition & Obs. wavelength [Å] & EW [Å] & Redshift\\
 \end{table}
 """)
     data = data[start:-end]
-    print(filename)
     Restframe(data, filename)
+
+# Determine extinction and column density
 
 elif option == 2:
     total_wave, total_flux, total_err, pltname = LoadData()
