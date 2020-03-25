@@ -70,12 +70,6 @@ freq = 440
 os.chdir(sys.path[0])
 
 
-
-
-
-
-
-
 # Setting the frequency of the ASTROWAKEUP sound
 
 duration = 1 
@@ -131,7 +125,7 @@ def CE(wave, flux, err, pltname):
         # Optical depth
         tau = C_a * t * H(a,x)
         return np.exp(-tau)
-    # Setting the constants as given by ???
+    # Setting the constants as given by Kasper Heinz
 
     c1 = -4.959
     c2 = 2.264
@@ -155,9 +149,6 @@ def CE(wave, flux, err, pltname):
     SIV = 1402
 
 
-    # Setting an initial guess for the column density
-
-    #nion = 1e20
     z_qso = float(input('Insert the redshift of the quasar: '))
     n_abs = int(input('Insert the number of DLAs: '))
     z_abs = list()
@@ -165,12 +156,12 @@ def CE(wave, flux, err, pltname):
         z_abs.append(float(input(f'Insert the redshift of DLA {number+1}: ')))
 
 
+    # Loading the composite QSO model
+
     model_data = np.genfromtxt("compoM.data")
     model_dict = {"MODwave": model_data[:,0]*(1+z_qso), "MODflux": model_data[:,1]}
 
-    #total_wave = np.hstack([data_dict["UVBwave"],data_dict["VISwave"],data_dict["NIRwave"]])
-    #total_flux = np.hstack([data_dict["UVBflux"],data_dict["VISflux"],data_dict["NIRflux"]])
-
+    # Preparing the loaded data
     total_wave = wave.copy()
     total_flux = flux.copy()
 
@@ -182,8 +173,7 @@ def CE(wave, flux, err, pltname):
     fit_flux = griddata(model_wave, model_flux, total_wave, fill_value=0)
 
 
-
-
+    # Removing the noisy flux
     selec_wave = (fit_wave !=0) & (fit_flux > 0)
 
     total_wave = total_wave[selec_wave]
@@ -247,6 +237,8 @@ def CE(wave, flux, err, pltname):
     flux_for_fit = total_flux.copy()*10**(17)
 
 
+
+    # Making it possible to fit up to three DLAs
     if len(z_abs) == 1:
         def fit_func(x, e, n: list):
             return fit_flux[wanted] * 10**(extinction_absorption(x,e)) * addAbs(x,n,0)
@@ -261,126 +253,20 @@ def CE(wave, flux, err, pltname):
         popt, pcov = curve_fit(fit_func, fit_wave[wanted], flux_for_fit[wanted],sigma=total_error[wanted], bounds= (np.array([0,1e19, 1e19, 1e19]),np.array([3,3e21, 3e21, 3e21])), check_finite= False)
 
 
-    #print(np.all(np.isfinite(fit_func(fit_wave,0, 1e20))))
-    #print(np.all(np.isfinite(fit_wave)))
-    #print(np.all(np.isfinite(total_flux*10**17)))
-    #plt.plot(fit_wave, fit_func(fit_wave,0, 1e20))
-    #plt.plot(fit_wave, total_flux*10**(17))
-    #plt.show()
-    #print(len(mask),len(fit_wave),len(flux_for_fit), len(err))
-    #popt, pcov = curve_fit(fit_func, fit_wave[wanted], flux_for_fit[wanted],sigma=total_error[wanted], bounds= (np.array([0,1e19]),np.array([3,3e21])), check_finite= False)
-    #print(popt, pcov)
     perr = np.sqrt(np.diag(pcov))
-    #print(perr)
-    #def ebv_coefficient_grid_search(search_interval: tuple, dla: np.array,  N_searches = 5, N_partitions = 30):
-    #    search_array = np.linspace(*search_interval, num = N_partitions)
 
-    #    losses = np.zeros_like(search_array)
-
-     #   for i, ebv_coefficient in enumerate(search_array):
-     #       ext_comp = 10**(extinction_absorption(fit_wave, [ebv_coefficient]))
-     #       red_mod = fit_flux * ext_comp * dla_mod
-        
-     #       prediction = smooth(red_mod,2)
-
-            #Selecting data to fit
-            #QSOselec = (fit_wave > x_CIV) & (fit_wave < x_MgII)
-            #print(type(QSOselec))
-     #       mask = np.ones(len(fit_wave), dtype = bool)
-     #       mask[np.argwhere((fit_wave < x_CIV) | (fit_wave > x_MgII))] = False
-     #       mask[np.argwhere((fit_wave > xmin_lamb) & (fit_wave < xmax_lamb))] = True
-     #       for k in tel_dict.keys():
-     #           mask[np.argwhere((tel_dict[f'{k}'][0] < fit_wave) | (np.argwhere(tel_dict[f'{k}'][1]) > fit_wave))] = False
-                #tel_list.append((fit_wave < tel_dict[f'{k}'][0]) | (fit_wave > A[1]))            
-            #Aselec = (fit_wave < A[0]) | (fit_wave > A[1])
-            #Bselec = (fit_wave < B[0]) | (fit_wave > B[1])
-            #Cselec = (fit_wave < C[0]) | (fit_wave > C[1])
-            #lineselec = (Aselec) & (Bselec) & (Cselec)
-            #print(type(lineselec))
-            #finalselec = [(QSOselec) & (lineselec)]
-
-            #Use mean squared error as loss function
-     #       losses[i]= np.sum(
-     #           ( prediction[mask] - total_flux[mask])**2
-     #       )
-     #   i_opti = np.argmin(losses)
-     #   if N_searches > 0:
-        
-
-            #Search again in the area around the optimum
-     #       a, b = i_opti-2, i_opti+2
-     #       if a < 0: a =0 
-      #      elif b>len(search_array)-1: b = len(search_array)-1
-
-       #     new_search_interval = (search_array[a], search_array[b] )
-        
-     #       return ebv_coefficient_grid_search(new_search_interval, dla, N_searches=N_searches-1, N_partitions=N_partitions)
-
-      #  else:
-      #      return search_array[i_opti], (1 / N_partitions)**N_searches * abs(search_interval[0]-search_interval[1]) 
-
-    #dla_for_fit = dla_mod = addAbs(fit_wave, nion)
-    #found_ebv, grid_size = ebv_coefficient_grid_search((0,3), dla_for_fit)
-    #print(f"found: {found_ebv}, with the size {grid_size}")
+    # Saving the constants from the fit
     ebv = popt[0]
     nion = list()
     for n in range(len(z_abs)):
         nion.append(popt[n+1] ) 
 
+    # Creating intervals around the Ly-alpha abs. lines
     xmin = list()
     xmax = list()
     for x in range(len(z_abs)):
         xmin.append((1+z_abs[x]) * lamb - 5)
         xmax.append((1+z_abs[x]) * lamb + 5)
-
-
-    #def nion_coefficient_grid_search(search_interval: tuple, dla: np.array,  N_searches = 5, N_partitions = 100):
-    #    search_array = np.linspace(*search_interval, num = N_partitions)
-
-    #    losses = np.zeros_like(search_array)
-
-    #    for i, nion_coefficient in enumerate(search_array):
-    #        dla_mod = addAbs(fit_wave, np.array([nion_coefficient], dtype=np.float64))
-            #ext_comp = 10**(extinction_absorption(fit_wave, [ebv_coefficient]))
-    #        red_mod = fit_flux * ext_comp * dla_mod
-        
-    #        prediction = smooth(red_mod,2)
-
-            #Use mean squared error as loss function
-    #        DLAselec = [(fit_wave > xmin) & (fit_wave < xmax)]
-    #        losses[i]= np.sum(
-    #            ( prediction[DLAselec] - total_flux[DLAselec])**2
-    #        )
-    #    i_opti = np.argmin(losses)
-    #    if N_searches > 0:
-        
-
-            #Search again in the area around the optimum
-    #        a, b = i_opti-2, i_opti+2
-    #        if a < 0: a =0 
-    #        elif b>len(search_array)-1: b = len(search_array)-1
-
-    #        new_search_interval = (search_array[a], search_array[b] )
-        
-    #        return nion_coefficient_grid_search(new_search_interval, dla, N_searches=N_searches-1, N_partitions=N_partitions)
-
-    #    else:
-    #        return search_array[i_opti], (1 / N_partitions)**N_searches * abs(search_interval[0]-search_interval[1]) 
-
-    #ext_for_fit = ext_comp = 10**(extinction_absorption(fit_wave, ebv))
-    #found_nion, grid_size_nion = nion_coefficient_grid_search((0,5e21), ext_for_fit)
-    #print(f"found: {found_nion:.2E}, with the size {grid_size_nion:.2E}")
-    #nion = found_nion
-
-    #nion = 3e20
-
-    #ebv = 0.65
-
-
-
-
-
-    #curve_fit(extinction_absorption,  model_dict["MODwave"], total_flux)
 
     ext_comp = 10**(extinction_absorption(model_dict["MODwave"], [ebv]))
     dla_mod = 1
@@ -388,27 +274,21 @@ def CE(wave, flux, err, pltname):
     for another in range(len(z_abs)):
         dla_mod = dla_mod * addAbs(model_dict["MODwave"], np.array([nion[another]], dtype=np.float64), another)
 
-    #Column = addAbs(model_dict["MODwave"], nion)[1]
+    
+    # Adding the DLAs to the model
 
     red_mod = model_dict["MODflux"] * ext_comp * dla_mod
 
 
     filters = ['UVB', 'VIS', 'NIR']
-    print(len(z_abs))
 
-
-    #plt.rcParams["font.family"] = "monospace"
-
-    #fig, subplots = plt.subplots(nrows = len(z_abs)+1, figsize=(10,6))
+    # Creating plot
     figure = plt.figure(figsize = (10,10))
     axs = list()
 
 
         
     figure.suptitle(f'{pltname}')
-
-    #for val in filters:
-    #    ax1.plot(data_dict[f"{val}wave"],smooth(data_dict[f"{val}flux"],45),'k-',lw=1)
 
     axs.append(
         figure.add_subplot(2, 1, 1, )
@@ -426,7 +306,6 @@ def CE(wave, flux, err, pltname):
 
     axs[0].set_ylim(-0.3e-17,1.75e-16)
     axs[0].set_xlim(3200,22200)
-    #axs[0].xscale('log')
 
     #   Insert the zero value of the flux
 
@@ -436,40 +315,24 @@ def CE(wave, flux, err, pltname):
 
     for j in tel_dict.keys():
         axs[0].axvspan(float(tel_dict[f"{j}"][0]) , tel_dict[f"{j}"][1] , color="grey", alpha = 0.3)
-    #plt.axvspan(5450, 5650, color="grey", alpha=0.3)
-    #plt.axvspan(10000, 10500, color="grey", alpha=0.3)
-    #plt.axvspan(12600, 12800, color="grey", alpha=0.3)
-    #plt.axvspan(13500, 14500, color="grey", alpha=0.3)
-    #plt.axvspan(18000, 19500, color="grey", alpha=0.3)
 
     # Labels
 
     axs[0].set_xlabel(r"Observed wavelength  [$\mathrm{\AA}$]",fontsize=12)
     axs[0].set_ylabel(r'Flux [$\mathrm{erg}\,\mathrm{s}^{-1}\,\mathrm{cm}^{-1}\,\mathrm{\AA}^{-1}$]',fontsize=12)
-    #plt.tight_layout()
 
     # Create a small subplot for the Lyman alpha absorption line from the DLA
-
-    #left, bottom, width, height = [0.57, 0.60, 0.37, 0.3]
     for y in np.arange(1,len(z_abs)+1,step = 1):
         axs.append(
             figure.add_subplot(2, len(z_abs), len(z_abs) + y)
         )
-        #axs[y] = fig.add_axes([left, bottom, width, height])
         axs[y].plot(wave,flux, 'k-', lw=1)
         axs[y].plot(model_dict["MODwave"], smooth(red_mod*1e-17,2),color='tab:red', lw=1)
-        
- #         axs[y] = plt.gca()
-#        axs[y].set_xlim([xmin[y-1]-90,xmax[y-1]+90])
         axs[y].set_xbound( lower = xmin[y-1]-90, upper = xmax[y-1]+90)
         
         plot_flux = flux.copy()
         plot_flux = plot_flux[ (wave > xmin[y-1]-100) & (xmax[y-1]+100 > wave)]
         axs[y].set_ybound([0,np.amax(plot_flux)])
-#        start, end = axs[y].get_xlim()
-        
- #       axs[y].xaxis.set_ticks(np.arange(start, end, 100))
-       
     # Save the figure as a pdf
 
 
