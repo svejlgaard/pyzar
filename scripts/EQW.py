@@ -74,8 +74,8 @@ Transition & Obs. wavelength [Å] & EW [Å] & Redshift\\
 """
 
     number_of_lines = float(input('Please insert the number of lines you want to fit: '))
-    number_of_MCI = 200
-
+    number_of_MCI = 1000
+    # The user chooses the lines and appropiate areas around the lines for the baseline fit
     for i in np.arange(number_of_lines):
         given_wave = input('Plese insert a wavelength value below and above the absorbtion/emission line for the baseline fitting (wavelength_min, wavelength_max): ').split(",")
         given_line = input('Plese insert a wavelength value below and above the absorbtion/emission line for the line fitting (wavelength_min, wavelength_max): ').split(",")
@@ -85,27 +85,24 @@ Transition & Obs. wavelength [Å] & EW [Å] & Redshift\\
         plt.rc('xtick', labelsize='x-small')
         plt.rc('ytick', labelsize='x-small')
         sp.plotter(xmin=wavelength_area[0],xmax=wavelength_area[1],color='k')
+        
+        # The baseline fit
         sp.baseline(order=0, xmin=wavelength_area[0],xmax=wavelength_area[1],exclude=[line_area[0],line_area[1]], interactive=False, subtract=True, selec_region=True, linestyle='--')
         sp.specfit(xmin=line_area[0], xmax=line_area[1], interactive=False, fittype='voigt',color='r' , annotate = True)
         sp.specfit.annotate(loc='center right')
    
-        #chi2 = sp.specfit.optimal_chi2(reduced=True,threshold='auto')
         line_xmin = np.argmax(wave > line_area[0])
         line_xmax = np.argmax(wave > line_area[1])
-        #print(line_xmin, line_xmax)
-        #print(sp.xarr.x_to_pix(line_xmin,xval_units='pixel'), sp.xarr.x_to_pix(line_xmax,xval_units='pixel'))
-        #eq = []
-        #step_size = wave[line_xmin+1]-wave[line_xmin]
-        #for i in np.arange(start= line_xmin, stop = line_xmax-1, step = 1):
-        #    eq_step = sp.data[i] * (wave[i+1]-wave[i]) / np.mean(sp.baseline.basespec)
-        #    eq.append(eq_step)
+
+        # The equivalent width measurement
         eq = sp.specfit.EQW(xmin=line_xmin, xmax=line_xmax, plot=True, annotate=True, fitted=True, components = False, plotcolor = 'blue', loc='center left', midpt_location= 'fitted', continuum_as_baseline= True)
         plt.rc('font', family='serif')
         plt.rc('xtick', labelsize='x-small')
         plt.rc('ytick', labelsize='x-small')
-        #plt.legend(f'{eq}')
+
+        # Saving the figure for the user to check afterwards
         plt.savefig(f"{dirName}/{pltname}_{time_signature}_EQW.png")
-        #sp.plotter.savefig(f"{pltname}_{time_signature}_EQW.png", path = f"/{dirName}")
+        
         #Monte Carlo iterations
         peak_MCI = []
         eq_error = []
@@ -119,8 +116,8 @@ Transition & Obs. wavelength [Å] & EW [Å] & Redshift\\
             # Reduce the warnings to shorten the run time of the script
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore","Warning: 'partition' will ignore the 'mask' of the MaskedArray.")
-                #warnings.filterwarnings("ignore","Passing the drawstyle with the linestyle as a single string is deprecated since Matplotlib 3.1 and support will be removed in 3.3; please pass the drawstyle separately using the drawstyle keyword argument to Line2D or set_drawstyle() method (or ds/set_ds()).")
-                #warnings.filterwarnings("ignore","divide by zero encountered in true_divide")
+                warnings.filterwarnings("ignore","Passing the drawstyle with the linestyle as a single string is deprecated since Matplotlib 3.1 and support will be removed in 3.3; please pass the drawstyle separately using the drawstyle keyword argument to Line2D or set_drawstyle() method (or ds/set_ds()).")
+                warnings.filterwarnings("ignore","divide by zero encountered in true_divide")
                 with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
                     sp_MCI.specfit(xmin=line_area[0], xmax=line_area[1], interactive=False)
 
@@ -128,23 +125,14 @@ Transition & Obs. wavelength [Å] & EW [Å] & Redshift\\
             new_eq = sp_MCI.specfit.EQW(xmin=line_xmin, xmax=line_xmax, plot=False, fitted=False, components = False )
             new_peak = sp_MCI.specfit.parinfo.values[1]
 
-            #cProfile.run("sp_MCI.specfit(xmin=line_area[0], xmax=line_area[1], interactive=False, fittype='voigt',color='r' , verbose = False)")
-            #sp_MCI.baseline(order=0, xmin=wavelength_area[0],xmax=wavelength_area[1],exclude=[line_area[0],line_area[1]], interactive=False, subtract=True, plot = False, selec_region = False, annotate = False)
-            #sp_MCI.baseline(order=0, xmin=wavelength_area[0],xmax=wavelength_area[1],exclude=[line_area[0],line_area[1]], interactive=False, subtract=True, selec_region=True, linestyle='--')
-            #new_peak = sp_MCI.specfit.parinfo.values[1]
-            #new_eq = []
-            #for i in np.arange(start= line_xmin, stop = line_xmax-1, step = 1):
-            #    new_eq_step = sp_MCI.data[i] * (wave[i+1]-wave[i]) / np.mean(sp_MCI.baseline.basespec)
-            #    new_eq.append(new_eq_step)
-            #new_eq = np.sum(new_eq)
-            #cProfile.run('sp_MCI.specfit.EQW(xmin=line_xmin, xmax=line_xmax, plot=False, fitted=False, components = False )')
             peak_MCI.append(new_peak)
             eq_error.append(new_eq)
 
+        # This part is inserted to avoid a RunTimeError, if something else is already playing on the speakers, when executing the astro-wake-up
         try:
             os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
         except:
-            print("DOOT!")
+            print("DOOT!") # An alternative astro-wake-up
         plt.figure()
         plt.rc('font', family='serif')
         plt.rc('xtick', labelsize='x-small')
@@ -152,15 +140,15 @@ Transition & Obs. wavelength [Å] & EW [Å] & Redshift\\
         sns.distplot(eq_error,rug=False,kde=False,fit=norm,hist_kws={"label":"Monte Carlo simulation data","color":"grey"},fit_kws={"label":"Gaussian"},axlabel='Equivalent width [nm]')
         plt.legend()
 
-    
+        # Saving the results from the Monte Carlo simulation
         output_name_eq = f"figure_{pltname}_{i}_{time_signature}.png"
         plt.savefig(f"{dirName}/{output_name_eq}")
 
-        #EQW_mean = np.mean(eq_error)
-        #EQW_error = np.std(eq_error)
+
         EQW_mean, EQW_error = norm.fit(eq_error)
         SHIFT_mean, SHIFT_error = norm.fit(peak_MCI)
     
+        # Saving the data as a table ready to insert in LaTeX
         tex_document += f" & ${SHIFT_mean:.6f}\pm {SHIFT_error:.6f}$ & ${EQW_mean:.4f}\pm {EQW_error:.4f}$ & \\\\"
 
 
@@ -174,5 +162,5 @@ Transition & Obs. wavelength [Å] & EW [Å] & Redshift\\
         with open(total_name, "w+") as outfile:
             outfile.write(tex_document+tex_footer) 
 
-
+    #Prints the table for the user to inspect
     print(tex_document+tex_footer)
