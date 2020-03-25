@@ -42,10 +42,6 @@ import collections
 def Restframe(string, name):
     dirName = f'{name}'
     dirName = dirName.split('/')[0]
-    #start_dir = len('eHAQ1407+0140/latex_table_1227-1217_')
-    #end_dir = len('.txt')
-    #dirName = dirName[start_dir:-end_dir]
-    print(dirName)
 
     if not os.path.exists(dirName):
         os.mkdir(dirName)
@@ -54,6 +50,8 @@ def Restframe(string, name):
         print("Directory " , dirName ,  " already exists")
 
 
+
+    #Creating a line dict from NIST
     line_dict = {'CIV_1548': [1548.202, 0.01, r'C \Rn{4} $\lambda$ 1548'],
     'SiIV_1402': [1402.77,0.1, r'Si \Rn{4} $\lambda$ 1403'],
     'Ly_a': [1215.6701, 0.0021, r'Ly-$\alpha$ $\lambda$ 1216'],
@@ -162,7 +160,6 @@ def Restframe(string, name):
     numify = lambda x: float(''.join(char for char in x if char.isdigit() or char == "." or char =="-"))
 
     tex_table = string
-    #tex_table = paste()
 
 
     tex_document = r"""
@@ -181,6 +178,7 @@ Transition & EW$_r$ [Å] & Redshift\\
 
     text = []
 
+    # Interactive way of categorising the lines
     for line in lines:
         [_, wave, eq, _] = line.strip().split("&")
         [wave, wave_err] = wave.split(r"\pm") 
@@ -203,20 +201,18 @@ Transition & EW$_r$ [Å] & Redshift\\
 
 
     data = unumpy.matrix(data)
-    #print(data)
 
     z = (data[:,0] / data[:,2] - 1)
 
-
+    # The errors and their contribution to the weighted redshift avarage 
     z_avg = np.mean(z)
     var  = sum(pow(i-z_avg,2) for i in z) / len(z)
     var = var[0,0]
-    #print(var)
     z_avg_std = math.sqrt(var.nominal_value)
-    #print(z_avg_std, z_avg.std_dev)
-    #z_avg_std = statistics.pstdev(z)
 
     ew_r = (data[:,1] / (z_avg + 1))
+
+    # Creating a LaTeX table for the results
 
     tex_begin = "\\noindent The weighted avarage of the redshift is $z = {:.1uL}$".format(z_avg)
 
@@ -237,5 +233,6 @@ Transition & EW$_r$ [Å] & Redshift\\
     with open(output_name, "w+") as outfile:
         outfile.write(tex_begin+tex_document+tex_footer) 
 
+    # When the file is saved, it is also printed and inserted in the clip board 
     print(tex_begin+tex_document+tex_footer)
     copy(tex_begin+tex_document+tex_footer)
